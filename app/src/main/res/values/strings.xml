@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Code Management ( codigo 1 )</string>
+    <string name="popular">Popular</string>
+    <string name="upcoming">Upcoming</string>
+    <string name="retry">Retry</string>
+    <string name="wrong">Something went wrong</string>
+</resources>
