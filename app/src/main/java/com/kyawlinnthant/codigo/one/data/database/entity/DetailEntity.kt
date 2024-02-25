@@ -1,13 +1,12 @@
-package com.kyawlinnthant.codigo.one.data.database.entity.detail
+package com.kyawlinnthant.codigo.one.data.database.entity
 
-import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = MovieDetailEntity.NAME
+    tableName = DetailEntity.NAME
 )
-data class MovieDetailEntity(
+data class DetailEntity(
     @PrimaryKey(autoGenerate = false)
     val id: Int,
     val adult: Boolean,
@@ -29,18 +28,8 @@ data class MovieDetailEntity(
     val video: Boolean,
     val voteAverage: Double,
     val voteCount: Int,
-
-
-    @Embedded
-    val genres: List<GenreEntity>,
-    @Embedded
-    val productionCompanies: List<ProductionCompanyEntity>,
-    @Embedded
-    val productionCountries: List<ProductionCountryEntity>,
-    @Embedded
-    val spokenLanguages: List<SpokenLanguageEntity>,
 ) {
     companion object {
-        const val NAME = "detail_name"
+        const val NAME = "detail"
     }
 }

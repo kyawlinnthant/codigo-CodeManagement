@@ -1,14 +1,12 @@
-package com.kyawlinnthant.codigo.one.data.database.entity.movie
+package com.kyawlinnthant.codigo.one.data.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = MovieEntity.NAME
+    tableName = UpcomingEntity.NAME
 )
-data class MovieEntity(
-
-    @PrimaryKey(autoGenerate = false)
+data class UpcomingEntity(
     val id: Int,
     val adult: Boolean,
     val backdropPath: String,
@@ -23,9 +21,11 @@ data class MovieEntity(
     val voteAverage: Double,
     val voteCount: Int,
     val isFavourite: Boolean,
-    val type: String
+    val page : Int
 ) {
+    @PrimaryKey(autoGenerate = true)
+    var upcomingId: Int = 0
     companion object {
-        const val NAME = "movie_name"
+        const val NAME = "upcoming_movie"
     }
 }

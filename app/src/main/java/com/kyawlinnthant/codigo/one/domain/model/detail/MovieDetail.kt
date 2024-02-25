@@ -21,32 +21,4 @@ data class MovieDetail(
     val video: Boolean = false,
     val voteAverage: Double = 0.0,
     val voteCount: Int = 0,
-
-    val genres: List<Genre> = emptyList(),
-    val productionCompanies: List<ProductionCompany> = emptyList(),
-    val productionCountries: List<ProductionCountry> = emptyList(),
-    val spokenLanguages: List<SpokenLanguage> = emptyList(),
-)
-
-data class Genre(
-    val id: Int = 0,
-    val name: String? = ""
-)
-
-data class ProductionCompany(
-    val id: Int = 0,
-    val logoPath: String? = "",
-    val name: String? = "",
-    val originCountry: String = ""
-)
-
-data class ProductionCountry(
-    val iso31661: String? = "",
-    val name: String? = "",
-)
-
-data class SpokenLanguage(
-    val englishName: String? = "",
-    val iso6391: String? = "",
-    val name: String? = ""
 )

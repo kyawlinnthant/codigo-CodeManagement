@@ -1,9 +1,11 @@
 package com.kyawlinnthant.codigo.one.presentation.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -69,11 +71,17 @@ fun MovieGraph(
             route = Screen.Detail.route(),
             arguments = listOf(navArgument(NavArgument.MOVIE_ID) { type = NavType.IntType })
         ) {
-            val id = it.arguments?.getInt(NavArgument.MOVIE_ID)
             val vm: DetailViewModel = hiltViewModel()
             val movie = vm.movie.collectAsState()
-            id?.let { movieId ->
-                vm.getMovie(id = movieId)
+            LaunchedEffect(Unit) {
+                val id = it.arguments?.getInt(NavArgument.MOVIE_ID)
+                Log.e("cheepar","$id")
+
+                id?.let { movieId ->
+                    vm.getMovie(id = movieId)
+                    vm.fetchMovies(id = movieId)
+                }
+
             }
             DetailScreen(movie = movie.value)
         }

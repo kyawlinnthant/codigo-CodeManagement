@@ -6,12 +6,9 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.kyawlinnthant.codigo.one.data.database.db.MovieDatabase
-import com.kyawlinnthant.codigo.one.data.database.entity.movie.MovieEntity
-import com.kyawlinnthant.codigo.one.data.database.entity.movie.PageKeyEntity
+import com.kyawlinnthant.codigo.one.data.database.entity.PopularEntity
 import com.kyawlinnthant.codigo.one.data.network.MovieApi
-import com.kyawlinnthant.codigo.one.domain.model.movie.toEntity
-import com.kyawlinnthant.codigo.one.domain.model.movie.toKey
-import com.kyawlinnthant.codigo.one.domain.util.Constant
+import com.kyawlinnthant.codigo.one.domain.model.movie.toPopularEntity
 import okio.IOException
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -21,113 +18,49 @@ import javax.inject.Inject
 class PopularPagingMediator @Inject constructor(
     private val apiService: MovieApi,
     private val database: MovieDatabase,
-) : RemoteMediator<Int, MovieEntity>() {
-
-    override suspend fun initialize(): InitializeAction {
-        return InitializeAction.LAUNCH_INITIAL_REFRESH
-    }
+) : RemoteMediator<Int, PopularEntity>() {
 
     override suspend fun load(
-        loadType: LoadType, state: PagingState<Int, MovieEntity>
+        loadType: LoadType, state: PagingState<Int, PopularEntity>
     ): MediatorResult {
 
-        val currentPage = getPage(loadType, state) ?: return MediatorResult.Success(
-            endOfPaginationReached = false
-        )
-
         return try {
-            val response = apiService.getPopular(page = currentPage, size = state.config.pageSize)
-            val isEndOfList = response.results?.isEmpty() ?: false
+            val loadKey = when (loadType) {
+                LoadType.REFRESH -> 1
+                LoadType.PREPEND -> return MediatorResult.Success(
+                    endOfPaginationReached = true
+                )
+
+                LoadType.APPEND -> {
+                    val lastItem = state.lastItemOrNull()
+                    if (lastItem == null) {
+                        1
+                    } else {
+                        lastItem.page + 1
+                    }
+                }
+            }
+            val response = apiService.getPopular(page = loadKey, size = state.config.pageSize)
+
 
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    database.movieDao().deleteAll()
-                    database.keyDao().deleteAll()
+                    database.popularDao().deleteAll()
                 }
-                val prevKey = if (currentPage == Constant.START_PAGE) null else currentPage - 1
-                val nextKey = if (isEndOfList) null else currentPage + 1
-                val keys = response.results?.map {
-                    it.toKey(
-                        nextPage = nextKey,
-                        prevPage = prevKey,
-                        currentPage = currentPage
-                    )
+                val entities = response.results.map {
+                    it.toPopularEntity(page = response.page)
                 }
-                val popular = response.results?.map {
-                    it.toEntity(
-                        type = MovieType.POPULAR,
-                    )
-                }
-
-                keys?.let {
-                    database.keyDao().addKeys(keys)
-                }
-                popular?.let {
-                    database.movieDao().insertMovies(popular)
-                }
+                database.popularDao().upsertAll(entities)
             }
 
-            MediatorResult.Success(endOfPaginationReached = isEndOfList)
+            MediatorResult.Success(
+                endOfPaginationReached = response.results.isEmpty()
+            )
         } catch (e: IOException) {
             MediatorResult.Error(e)
         } catch (e: HttpException) {
             MediatorResult.Error(e)
-        } catch (e: Exception) {
-            MediatorResult.Error(e)
         }
-    }
-
-    private suspend fun getPage(
-        loadType: LoadType,
-        state: PagingState<Int, MovieEntity>
-    ): Int? {
-
-        return when (loadType) {
-
-            // loading
-            LoadType.REFRESH -> {
-                val remoteKeys = getRemoteKeyClosestToCurrentPosition(state)
-                remoteKeys?.currentPage ?: Constant.START_PAGE
-            }
-
-            // has data, load more
-            LoadType.APPEND -> {
-                val remoteKeys = getLastRemoteKey(state)
-                remoteKeys?.nextPage
-            }
-
-            // has data, load previous
-            LoadType.PREPEND -> {
-                val remoteKeys = getFirstRemoteKey(state)
-                remoteKeys?.prevPage
-            }
-        }
-    }
-
-    private suspend fun getRemoteKeyClosestToCurrentPosition(state: PagingState<Int, MovieEntity>): PageKeyEntity? {
-        return state.anchorPosition?.let { position ->
-            state.closestItemToPosition(position)?.id?.let { id ->
-                database.keyDao().getKey(id)
-            }
-        }
-    }
-
-    private suspend fun getLastRemoteKey(state: PagingState<Int, MovieEntity>): PageKeyEntity? {
-        return state.pages
-            .lastOrNull { it.data.isNotEmpty() }
-            ?.data?.lastOrNull()
-            ?.let { movie ->
-                database.keyDao().getKey(movie.id)
-            }
-    }
-
-    private suspend fun getFirstRemoteKey(state: PagingState<Int, MovieEntity>): PageKeyEntity? {
-        return state.pages
-            .firstOrNull { it.data.isNotEmpty() }
-            ?.data?.firstOrNull()
-            ?.let { movie ->
-                database.keyDao().getKey(movie.id)
-            }
 
     }
 }

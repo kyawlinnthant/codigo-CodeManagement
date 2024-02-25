@@ -4,14 +4,13 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.kyawlinnthant.codigo.one.data.database.db.MovieDatabase
-import com.kyawlinnthant.codigo.one.data.database.entity.detail.MovieDetailEntity
-import com.kyawlinnthant.codigo.one.data.database.entity.movie.MovieEntity
+import com.kyawlinnthant.codigo.one.data.database.entity.DetailEntity
+import com.kyawlinnthant.codigo.one.data.database.entity.PopularEntity
+import com.kyawlinnthant.codigo.one.data.database.entity.UpcomingEntity
 import com.kyawlinnthant.codigo.one.data.dto.detail.MovieDetailDto
 import com.kyawlinnthant.codigo.one.data.network.MovieApi
-import com.kyawlinnthant.codigo.one.data.paging.MovieType
 import com.kyawlinnthant.codigo.one.data.paging.PopularPagingMediator
 import com.kyawlinnthant.codigo.one.data.paging.UpcomingPagingMediator
-import com.kyawlinnthant.codigo.one.data.paging.type
 import com.kyawlinnthant.codigo.one.domain.repo.MovieRepo
 import com.kyawlinnthant.codigo.one.domain.util.Constant
 import com.kyawlinnthant.codigo.one.domain.util.DataResult
@@ -23,9 +22,14 @@ class MovieRepoImpl @Inject constructor(
     private val api: MovieApi,
     private val db: MovieDatabase
 ) : MovieRepo {
+
+    private val popularDao = db.popularDao()
+    private val upcomingDao = db.upcomingDao()
+    private val detailDao = db.detailDao()
+
     @OptIn(ExperimentalPagingApi::class)
-    override fun getPopular(): Pager<Int, MovieEntity> {
-        val dbSource = { db.movieDao().pagingSource(type = MovieType.POPULAR.type()) }
+    override fun getPopular(): Pager<Int, PopularEntity> {
+        val dbSource = { popularDao.pagingSource() }
         val config = PagingConfig(
             initialLoadSize = Constant.INITIAL_LOAD_SIZE,
             pageSize = Constant.PAGE_SIZE,
@@ -47,8 +51,8 @@ class MovieRepoImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    override fun getUpcoming(): Pager<Int, MovieEntity> {
-        val dbSource = { db.movieDao().pagingSource(type = MovieType.UPCOMING.type()) }
+    override fun getUpcoming(): Pager<Int, UpcomingEntity> {
+        val dbSource = { upcomingDao.pagingSource() }
         val config = PagingConfig(
             initialLoadSize = Constant.INITIAL_LOAD_SIZE,
             pageSize = Constant.PAGE_SIZE,
@@ -69,17 +73,27 @@ class MovieRepoImpl @Inject constructor(
         )
     }
 
-    override suspend fun updatePopular(id: Int, enabled: Boolean) {
-        db.movieDao().updateFavourite(enabled = enabled, id = id)
+    override suspend fun updatePopularFavourite(id: Int, enabled: Boolean) {
+        popularDao.updateFavourite(enabled = enabled, id = id)
+    }
+
+    override suspend fun updateUpcomingFavourite(id: Int, enabled: Boolean) {
+        upcomingDao.updateFavourite(enabled = enabled, id = id)
     }
 
     override suspend fun fetchDetail(id: Int): DataResult<MovieDetailDto> {
         return safeApiCall {
-            api.getDetail(id)
+            api.getDetail(
+                id = id
+            )
         }
     }
 
-    override suspend fun listenDetail(id: Int): Flow<MovieDetailEntity> {
-        return db.detailDao().listenDetail(id)
+    override suspend fun insertDetail(detail: DetailEntity) {
+        detailDao.insertDetail(detail)
+    }
+
+    override suspend fun listenDetail(id: Int): Flow<DetailEntity> {
+        return detailDao.listenDetail(id)
     }
 }

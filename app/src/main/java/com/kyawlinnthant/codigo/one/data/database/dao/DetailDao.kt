@@ -5,24 +5,28 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.kyawlinnthant.codigo.one.data.database.entity.detail.MovieDetailEntity
+import androidx.room.Update
+import com.kyawlinnthant.codigo.one.data.database.entity.DetailEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DetailDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addDetail(detail: MovieDetailEntity)
+    suspend fun insertDetail(detail: DetailEntity)
 
-    @Query("SELECT * FROM ${MovieDetailEntity.NAME} WHERE id =:id")
-    fun getDetail(id: Int): MovieDetailEntity
+    @Query("SELECT * FROM ${DetailEntity.NAME} WHERE id =:id")
+    fun getDetail(id: Int): DetailEntity
 
-    @Query("SELECT * FROM ${MovieDetailEntity.NAME} WHERE id =:id")
-    fun listenDetail(id: Int): Flow<MovieDetailEntity>
+    @Query("SELECT * FROM ${DetailEntity.NAME} WHERE id =:id")
+    fun listenDetail(id: Int): Flow<DetailEntity>
 
-    @Query("DELETE FROM ${MovieDetailEntity.NAME}")
+    @Update(entity = DetailEntity::class)
+    suspend fun updateDetail(detail: DetailEntity)
+
+    @Query("DELETE FROM ${DetailEntity.NAME}")
     suspend fun deleteAll()
 
-    @Delete(entity = MovieDetailEntity::class)
-    suspend fun deleteDetail(detail: MovieDetailEntity)
+    @Delete(entity = DetailEntity::class)
+    suspend fun deleteDetail(detail: DetailEntity)
 }
