@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.google.hilt)
     alias(libs.plugins.google.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.jupiter)
 }
 
 android {
@@ -17,7 +18,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.kyawlinnthant.codigo.one.DbTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -64,4 +65,23 @@ dependencies {
     implementation(libs.hilt.navigation)
     ksp(libs.google.hilt.compiler)
     implementation(libs.serialization.json)
+    implementation(libs.androidx.runner)
+
+    androidTestImplementation(libs.google.hilt.test)
+    testImplementation(libs.mockk)
+    androidTestImplementation(libs.mockk)
+
+    testImplementation(libs.mock.web.server)
+
+    testImplementation(libs.coroutines.test)
+    androidTestImplementation(libs.coroutines.test)
+
+    testImplementation(libs.jupiter.api)
+    androidTestImplementation(libs.jupiter.api)
+
+    testRuntimeOnly(libs.jupiter.engine)
+    androidTestRuntimeOnly(libs.jupiter.engine)
+    
+    testImplementation(libs.assertk)
+    androidTestImplementation(libs.assertk)
 }

@@ -32,4 +32,5 @@ data class DetailEntity(
     companion object {
         const val NAME = "detail"
     }
+
 }
